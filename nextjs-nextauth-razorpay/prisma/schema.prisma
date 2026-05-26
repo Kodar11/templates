@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                  String             @id @default(uuid())
+  email               String             @unique
+  username            String             @unique
+  password            String
+  role                Role               @default(USER)
+  isVerified          Boolean            @default(false)
+  subscriptionStatus  SubscriptionStatus @default(FREE)
+  dailyDesignCredits  Int                @default(0)
+  dailyProblemCredits Int                @default(0)
+  lastCreditReset     DateTime           @default(now())
+  otps                Otp[]
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  Payment             Payment[]
+}
+
+model Otp {
+  id        String   @id @default(uuid())
+  email     String
+  otp       String
+  expiresAt DateTime
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([email])
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+enum Role {
+  USER
+  ADMIN
+  CONTENT_ADDER
+}
+
+enum SubscriptionStatus {
+  FREE
+  PRO
+  TEAM
+  CANCELLED
+}
+
+model Plan {
+  id               String   @id @default(uuid())
+  name             String   @unique
+  priceInPaisa     Int
+  razorpayPlanId   String   @unique
+  payments         Payment[]
+}
+
+model Payment {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  planId String
+  plan   Plan   @relation(fields: [planId], references: [id])
+
+  razorpaySubscriptionId String?       @unique
+  status                 PaymentStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum PaymentStatus {
+  PENDING
+  ACTIVE
+  CANCELLED
+  FAILED
+}

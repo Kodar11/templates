@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+# Add any ML libraries you need
+# For example:
+# scikit-learn
+# numpy
+# pandas
+# If you use a simple local model, you must include the saving/loading library
